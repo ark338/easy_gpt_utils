@@ -28,6 +28,10 @@ class Embedding():
 
         embedding = openai.Embedding.create(model=self.model, input=input_text_list)
         return [(text, data.embedding) for text, data in zip(input_text_list, embedding.data)], embedding.usage.total_tokens
+
+    def get_raw_embedding(self, raw_text: str):
+        embedding = openai.Embedding.create(model=self.model, input=raw_text)
+        return list(embedding.data[0].embedding)
     
     def create_embeddings(self, input_text_list):
         # if input_text_list is not a list throw an exception
@@ -55,7 +59,7 @@ class Embedding():
             result.extend(ebd)
         return result, tokens
 
-    def create_embeddings_from_text(self, text):
+    def create_embeddings_from_text(self, text: str):
         # if text is not a string throw an exception
         if not isinstance(text, str):
             raise TypeError("text should be a string")
