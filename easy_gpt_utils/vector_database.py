@@ -1,5 +1,4 @@
 import pinecone
-from embedding import Embedding
 import uuid
 from enum import Enum
 from typing import Union, List, Tuple, Optional, Dict, Any
@@ -86,29 +85,37 @@ class Pinecone():
             self.index.query(namespace = namespace, top_k = top_k, vector=vector, id=id, filter=filter, include_metadata=True)['matches'] if result['score'] > threshold]
 
 
-testcase = [
-'withstand voltage	耐压',
-'fingerprint U-lock	指纹U型锁',
-'No rider detected	未触发站人模式'
-]
+# TODO: test code should move to unit test
+define_test = False
+if define_test:
+    try:
+        from .embedding import Embedding  # for when the module is imported
+    except ImportError:
+        from embedding import Embedding  # for when the module is run directly
 
-embedding_instance = Embedding()
+    testcase = [
+    'withstand voltage	耐压',
+    'fingerprint U-lock	指纹U型锁',
+    'No rider detected	未触发站人模式'
+    ]
 
-my_pinecone = Pinecone(index = 'segway-knowledge-base', environment='asia-southeast1-gcp')
-#print ("delete", my_pinecone.delete(namespace = NamesSpaces.Glossary.value, ids = ['id0']))
-#print ("my_pinecone: ", my_pinecone.fetch(namespace = NamesSpaces.Glossary.value, ids = ['id0', 'id1']))
-#print ("update test", my_pinecone.update(namespace = NamesSpaces.Glossary.value, id = 'id0', metadata = {'category': 'nihkao'}))
-#print ("delete all", my_pinecone.delete(namespace = NamesSpaces.Glossary.value, deleteAll = 'true'))
+    embedding_instance = Embedding()
 
-if False:
-    vectors = [vector for vector in [embedding_instance.get_raw_embedding(item) for item in testcase]]
-    metas = [create_meta("Glossary", item, url = "https://www.segway.com.cn/", label = ["Glossary"]) for item in testcase]
-    ids = [str('id' + str(id)) for id in range(len(testcase))]
+    my_pinecone = Pinecone(index = 'segway-knowledge-base', environment='asia-southeast1-gcp')
+    #print ("delete", my_pinecone.delete(namespace = NamesSpaces.Glossary.value, ids = ['id0']))
+    #print ("my_pinecone: ", my_pinecone.fetch(namespace = NamesSpaces.Glossary.value, ids = ['id0', 'id1']))
+    #print ("update test", my_pinecone.update(namespace = NamesSpaces.Glossary.value, id = 'id0', metadata = {'category': 'nihkao'}))
+    #print ("delete all", my_pinecone.delete(namespace = NamesSpaces.Glossary.value, deleteAll = 'true'))
 
-    to_upsert = list(zip(ids, vectors, metas))
+    if False:
+        vectors = [vector for vector in [embedding_instance.get_raw_embedding(item) for item in testcase]]
+        metas = [create_meta("Glossary", item, url = "https://www.segway.com.cn/", label = ["Glossary"]) for item in testcase]
+        ids = [str('id' + str(id)) for id in range(len(testcase))]
 
-    my_pinecone.upsert(namespace = NamesSpaces.Glossary.value, items = to_upsert)
-    print ("my_pinecone: ", my_pinecone.fetch(namespace = NamesSpaces.Glossary.value, ids = ['id0', 'id1']))
+        to_upsert = list(zip(ids, vectors, metas))
 
-embe = embedding_instance.get_raw_embedding("withstand voltage")
-print ("querytest: ", my_pinecone.query_meta(namespace = NamesSpaces.Glossary.value, threshold = 0.8, vector = embe, top_k = 5))
+        my_pinecone.upsert(namespace = NamesSpaces.Glossary.value, items = to_upsert)
+        print ("my_pinecone: ", my_pinecone.fetch(namespace = NamesSpaces.Glossary.value, ids = ['id0', 'id1']))
+
+    embe = embedding_instance.get_raw_embedding("withstand voltage")
+    print ("querytest: ", my_pinecone.query_meta(namespace = NamesSpaces.Glossary.value, threshold = 0.8, vector = embe, top_k = 5))
