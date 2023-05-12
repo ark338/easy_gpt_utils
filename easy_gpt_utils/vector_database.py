@@ -1,3 +1,4 @@
+import os
 import pinecone
 import uuid
 from enum import Enum
@@ -86,7 +87,7 @@ class Pinecone():
 
 
 # TODO: test code should move to unit test
-define_test = False
+define_test = True
 if define_test:
     try:
         from .embedding import Embedding  # for when the module is imported
@@ -99,7 +100,18 @@ if define_test:
     'No rider detected	未触发站人模式'
     ]
 
-    embedding_instance = Embedding()
+    use_openai = False
+    if use_openai:
+        # test for openai
+        embedding_instance = Embedding()
+    else :
+        # test for azure
+        embedding_instance = Embedding(
+            model="model-text-embedding-ada-002", 
+            api_type="azure", 
+            api_key = os.getenv("AZURE_API_KEY"),
+            api_base = "https://ninebot-rd-openai-1.openai.azure.com/",
+            api_version = "2022-12-01")
 
     my_pinecone = Pinecone(index = 'segway-knowledge-base', environment='asia-southeast1-gcp')
     #print ("delete", my_pinecone.delete(namespace = NamesSpaces.Glossary.value, ids = ['id0']))
@@ -118,4 +130,6 @@ if define_test:
         print ("my_pinecone: ", my_pinecone.fetch(namespace = NamesSpaces.Glossary.value, ids = ['id0', 'id1']))
 
     embe = embedding_instance.get_raw_embedding("withstand voltage")
-    print ("querytest: ", my_pinecone.query_meta(namespace = NamesSpaces.Glossary.value, threshold = 0.8, vector = embe, top_k = 5))
+    data = my_pinecone.query_meta(namespace = NamesSpaces.Glossary.value, threshold = 0.0, vector = embe, top_k = 5)
+    print ("querytest: ", data)
+    print ("content str", "\n".join(item['metadata']['content'] for item in data))

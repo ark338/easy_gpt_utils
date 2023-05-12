@@ -12,6 +12,9 @@ import pickle
 
 class Embedding():
     def __init__(self, model="text-embedding-ada-002", api_type="open_ai", api_base=None, api_key=None, api_version=None):
+        if (api_type != "open_ai") and (api_type != "azure"):
+            raise Exception("api_type should be open_ai or azure")
+
         self.model = model
         self.engine = model
         self.api_type = api_type
@@ -30,26 +33,43 @@ class Embedding():
             raise TypeError("input_text_list should be a list")
 
         # openai api do not allow set model and engine at the same time
-        # by testing, set engine only
-        embedding = openai.Embedding.create(
-            #model=self.model, 
-            input=input_text_list, 
-            engine=self.engine,
-            api_type=self.api_type, 
-            api_key=self.api_key, 
-            api_base=self.api_base, 
-            api_version=self.api_version)
+        if (self.api_type == "open_ai"):
+            embedding = openai.Embedding.create(
+                model=self.model, 
+                input=input_text_list, 
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
+        elif (self.api_type == "azure"):
+            embedding = openai.Embedding.create(
+                input=input_text_list, 
+                engine=self.engine,
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
         return [(text, data.embedding) for text, data in zip(input_text_list, embedding.data)], embedding.usage.total_tokens
 
     def get_raw_embedding(self, raw_text: str):
-        embedding = openai.Embedding.create(
-            #model=self.model, 
-            input=raw_text,
-            engine=self.engine,
-            api_type=self.api_type, 
-            api_key=self.api_key, 
-            api_base=self.api_base, 
-            api_version=self.api_version)
+         # openai api do not allow set model and engine at the same time
+        if (self.api_type == "open_ai"):
+            embedding = openai.Embedding.create(
+                model=self.model, 
+                input=raw_text,
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
+        elif (self.api_type == "azure"):
+            embedding = openai.Embedding.create(
+                input=raw_text,
+                engine=self.engine,
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
+            
         return list(embedding.data[0].embedding)
     
     def create_embeddings(self, input_text_list):
@@ -125,7 +145,8 @@ if __name__ == "__main__":
     #print(embedding.create_embedding_from_file(args.input, args.output))
     #print(embedding.create_embedding_from_file_save_to_file(args.input, args.output))
     
-    if False:
+    use_openai = True
+    if use_openai:
         # test for openai
         embedding = Embedding()
     else :
@@ -133,6 +154,7 @@ if __name__ == "__main__":
         embedding = Embedding(
             model="model-text-embedding-ada-002", 
             api_type="azure", 
+            api_key = os.getenv("AZURE_API_KEY"),
             api_base = "https://ninebot-rd-openai-1.openai.azure.com/",
             api_version = "2022-12-01")
     
