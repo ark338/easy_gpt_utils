@@ -11,14 +11,20 @@ import pickle
 # this python script is used to generate the embedding of the input file or folder
 
 class Embedding():
-    def __init__(self, model="text-embedding-ada-002"):
+    def __init__(self, model="text-embedding-ada-002", api_type="open_ai", api_base=None, api_key=None, api_version=None):
+        if (api_type != "open_ai") and (api_type != "azure"):
+            raise Exception("api_type should be open_ai or azure")
+
         self.model = model
+        self.engine = model
+        self.api_type = api_type
+        self.api_base = api_base
+        self.api_key = api_key
+        self.api_version = api_version
     
     # return embedding of the input text
     def __call__(self, text):
         return self.get_embedding([text]);
-
-    # q: openai.Embedding.create的返回类型是什么
 
     # return embedding of the input text list
     def get_embedding(self, input_text_list):
@@ -26,8 +32,45 @@ class Embedding():
         if not isinstance(input_text_list, list):
             raise TypeError("input_text_list should be a list")
 
-        embedding = openai.Embedding.create(model=self.model, input=input_text_list)
+        # openai api do not allow set model and engine at the same time
+        if (self.api_type == "open_ai"):
+            embedding = openai.Embedding.create(
+                model=self.model, 
+                input=input_text_list, 
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
+        elif (self.api_type == "azure"):
+            embedding = openai.Embedding.create(
+                input=input_text_list, 
+                engine=self.engine,
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
         return [(text, data.embedding) for text, data in zip(input_text_list, embedding.data)], embedding.usage.total_tokens
+
+    def get_raw_embedding(self, raw_text: str):
+         # openai api do not allow set model and engine at the same time
+        if (self.api_type == "open_ai"):
+            embedding = openai.Embedding.create(
+                model=self.model, 
+                input=raw_text,
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
+        elif (self.api_type == "azure"):
+            embedding = openai.Embedding.create(
+                input=raw_text,
+                engine=self.engine,
+                api_type=self.api_type, 
+                api_key=self.api_key, 
+                api_base=self.api_base, 
+                api_version=self.api_version)
+            
+        return list(embedding.data[0].embedding)
     
     def create_embeddings(self, input_text_list):
         # if input_text_list is not a list throw an exception
@@ -55,7 +98,7 @@ class Embedding():
             result.extend(ebd)
         return result, tokens
 
-    def create_embeddings_from_text(self, text):
+    def create_embeddings_from_text(self, text: str):
         # if text is not a string throw an exception
         if not isinstance(text, str):
             raise TypeError("text should be a string")
@@ -96,9 +139,24 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="text-embedding-ada-002", help="model name")
     args = parser.parse_args()
 
-    embedding = Embedding(model=args.model)
+    #embedding = Embedding(model=args.model)
     #print(embedding.create_embeddings(args.input))
     #print(embedding("hello world"))
-    print(embedding.create_embedding_from_file(args.input, args.output))
+    #print(embedding.create_embedding_from_file(args.input, args.output))
     #print(embedding.create_embedding_from_file_save_to_file(args.input, args.output))
-
+    
+    use_openai = True
+    if use_openai:
+        # test for openai
+        embedding = Embedding()
+    else :
+        # test for azure
+        embedding = Embedding(
+            model="model-text-embedding-ada-002", 
+            api_type="azure", 
+            api_key = os.getenv("AZURE_API_KEY"),
+            api_base = "https://ninebot-rd-openai-1.openai.azure.com/",
+            api_version = "2022-12-01")
+    
+    print(embedding.create_embeddings_from_text(args.input))
+    print(embedding.get_raw_embedding(args.input))
