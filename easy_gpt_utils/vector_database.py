@@ -87,8 +87,8 @@ class Pinecone():
 
 
 # TODO: test code should move to unit test
-define_test = True
-if define_test:
+# unit tests
+if __name__ == "__main__":
     try:
         from .embedding import Embedding  # for when the module is imported
     except ImportError:
@@ -107,7 +107,7 @@ if define_test:
     else :
         # test for azure
         embedding_instance = Embedding(
-            model="model-text-embedding-ada-002", 
+            model="text-embedding-ada-002", 
             api_type="azure", 
             api_key = os.getenv("AZURE_API_KEY"),
             api_base = "https://ninebot-rd-openai-1.openai.azure.com/",
