@@ -145,14 +145,14 @@ if __name__ == "__main__":
     #print(embedding.create_embedding_from_file(args.input, args.output))
     #print(embedding.create_embedding_from_file_save_to_file(args.input, args.output))
     
-    use_openai = True
+    use_openai = False
     if use_openai:
         # test for openai
         embedding = Embedding()
     else :
         # test for azure
         embedding = Embedding(
-            model="model-text-embedding-ada-002", 
+            model="text-embedding-ada-002", 
             api_type="azure", 
             api_key = os.getenv("AZURE_API_KEY"),
             api_base = "https://ninebot-rd-openai-1.openai.azure.com/",
