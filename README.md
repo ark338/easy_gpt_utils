@@ -16,8 +16,12 @@ embedding is a simple util to create embedding (1536 dimension victor) for strin
 1. create embedding from string ,paragrahp and file
 2. save embeddings to file
 
-## vector_base
-not implemented yet
+## vector_database
+support pinecorn as vector database now
 
 
-## In summary, easy_gpt_utils is now on early stage and hope it could help to create more powerful AI Apps in the future
+## latest version
+V0.1.10
+
+
+### In summary, easy_gpt_utils is now on early stage and hope it could help to create more powerful AI Apps in the future
